@@ -521,7 +521,7 @@ async def start(client, m: Message):
         start_msg = await client.send_photo(
             chat_id=user_id,
             photo="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
-            caption=f"🌟 Welcome {first_name}! 🌟",
+            caption=f'🌟 Welcome <a href="tg://user?id={user_id}">{first_name}</a>! 🌟',
             parse_mode=enums.ParseMode.HTML,
         )
         has_photo = True
@@ -540,6 +540,7 @@ async def start(client, m: Message):
             logging.warning(f"[/start] edit: {_e}")
 
     # ── Step 3: progress animation ────────────────────────────────────────────
+    import html as _html_safe
     steps = [
         ("Initializing Uploader bot... 🤖", "[⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️] 0%"),
         ("Loading features... ⏳",          "[🟥🟥🟥⬜️⬜️⬜️⬜️⬜️⬜️⬜️] 25%"),
@@ -548,7 +549,7 @@ async def start(client, m: Message):
     ]
     for desc, prog in steps:
         await asyncio.sleep(1)
-        await edit_msg(f"🌟 Welcome {first_name}! 🌟\n\n{desc}\n\nProgress: {prog}\n\n")
+        await edit_msg(f'🌟 Welcome <a href="tg://user?id={user_id}">{_html_safe.escape(first_name)}</a>! 🌟\n\n{desc}\n\nProgress: {prog}\n\n')
 
     await asyncio.sleep(1)
 
@@ -574,7 +575,6 @@ async def start(client, m: Message):
     ])
 
     # ── Step 5: final message ─────────────────────────────────────────────────
-    import html as _html_safe
     _fn_safe = _html_safe.escape(first_name)
 
     if is_authorized:
@@ -606,8 +606,9 @@ async def start(client, m: Message):
                 "Please contact the owner to get access.</blockquote>\n"
             )
 
+    _mention = f'<a href="tg://user?id={user_id}">{_fn_safe}</a>'
     await edit_msg(
-        f"🌟 <b>Welcome, {_fn_safe}!</b> 🌟\n\n"
+        f"🌟 <b>Welcome, {_mention}!</b> 🌟\n\n"
         f"{_middle}\n"
         f"<b>✨ Tap the buttons below</b> to get started.\n\n"
         f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>",
@@ -626,7 +627,7 @@ async def start(client, m: Message):
 async def back_to_main_menu(client, callback_query):
     user_id = callback_query.from_user.id
     first_name = callback_query.from_user.first_name
-    caption = f"✨ **Welcome back, [{first_name}](tg://user?id={user_id})!**"
+    caption = f'✨ <b>Welcome back, <a href="tg://user?id={user_id}">{first_name}</a>!</b>'
     keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton("✨ Commands", callback_data="cmd_command")],
             [InlineKeyboardButton("💎 Features", callback_data="feat_command"), InlineKeyboardButton("⚙️ Settings", callback_data="setttings")],
@@ -636,6 +637,7 @@ async def back_to_main_menu(client, callback_query):
     
     await callback_query.message.edit_media(
       InputMediaPhoto(
+        parse_mode=enums.ParseMode.HTML,
         media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
         caption=caption
       ),
@@ -649,13 +651,14 @@ async def back_to_main_menu(client, callback_query):
 async def cmd(client, callback_query):
     user_id = callback_query.from_user.id
     first_name = callback_query.from_user.first_name
-    caption = f"✨ **Hey [{first_name}](tg://user?id={user_id})!\nChoose a section to explore commands.**"
+    caption = f'✨ <b>Hey <a href="tg://user?id={user_id}">{first_name}</a>!</b>\nChoose a section to explore commands.'
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("🚻 User", callback_data="user_command"), InlineKeyboardButton("🚹 Owner", callback_data="owner_command")],
         [InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_to_main_menu")]
     ])
     await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
     ),
@@ -695,6 +698,7 @@ async def help_button(client, callback_query):
     
   await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
     ),
@@ -722,6 +726,7 @@ async def help_button_owner(client, callback_query):
     
   await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
     ),
@@ -751,18 +756,19 @@ async def _show_plan_for_user_cq(client, cq):
         bot_username = "bot"
 
     is_premium = _is_owner_flag or db.is_user_authorized(user_id, bot_username)
+    _mention = f'<a href="tg://user?id={user_id}">{_fn_safe}</a>'
 
     if is_premium:
         text = (
             f"💎 <b>Membership Status</b>\n\n"
-            f"✅ <b>{_fn_safe}</b>, you are a <b>Premium Member!</b>\n\n"
+            f"✅ Hey {_mention}, you are a <b>Premium Member!</b>\n\n"
             f"<blockquote>You have full access to all features.\nEnjoy the bot!</blockquote>\n\n"
             f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>"
         )
     else:
         text = (
             f"🔒 <b>Membership Status</b>\n\n"
-            f"❌ <b>{_fn_safe}</b>, you are <b>not a Premium Member.</b>\n\n"
+            f"❌ Hey {_mention}, you are <b>not a Premium Member.</b>\n\n"
             f"<blockquote>Contact the owner to get premium access.</blockquote>\n\n"
             f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>"
         )
@@ -782,20 +788,21 @@ async def show_plan_for_user_msg(bot_client, m, bot_username: str):
     first_name = (m.from_user.first_name if m.from_user else None) or "User"
     import html as _h
     _fn_safe = _h.escape(first_name)
+    _mention = f'<a href="tg://user?id={user_id}">{_fn_safe}</a>'
     _is_owner_flag = user_id in {OWNER, OWNER_ID, OWNER_ID2}
     is_premium = _is_owner_flag or db.is_user_authorized(user_id, bot_username)
 
     if is_premium:
         text = (
             f"💎 <b>Membership Status</b>\n\n"
-            f"✅ <b>{_fn_safe}</b>, you are a <b>Premium Member!</b>\n\n"
+            f"✅ Hey {_mention}, you are a <b>Premium Member!</b>\n\n"
             f"<blockquote>You have full access to all features.\nEnjoy the bot!</blockquote>\n\n"
             f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>"
         )
     else:
         text = (
             f"🔒 <b>Membership Status</b>\n\n"
-            f"❌ <b>{_fn_safe}</b>, you are <b>not a Premium Member.</b>\n\n"
+            f"❌ Hey {_mention}, you are <b>not a Premium Member.</b>\n\n"
             f"<blockquote>Contact the owner to get premium access.</blockquote>\n\n"
             f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>"
         )
@@ -818,6 +825,7 @@ async def settings_button(client, callback_query):
 
     await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
     ),
@@ -828,13 +836,14 @@ async def settings_button(client, callback_query):
 async def handle_thumbnail_command(client, callback_query):
     user_id = callback_query.from_user.id
     first_name = callback_query.from_user.first_name
-    caption = f"✨ **Hey [{first_name}](tg://user?id={user_id})!\nChoose a thumbnail option below.**"
+    caption = f'✨ <b>Hey <a href="tg://user?id={user_id}">{first_name}</a>!</b>\nChoose a thumbnail option below.'
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("🎥 Video", callback_data="viideo_thumbnail_command"), InlineKeyboardButton("📑 PDF", callback_data="pddf_thumbnail_command")],
         [InlineKeyboardButton("🔙 Back to Settings", callback_data="setttings")]
     ])
     await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
     ),
@@ -845,13 +854,14 @@ async def handle_thumbnail_command(client, callback_query):
 async def handle_watermark_menu(client, callback_query):
     user_id = callback_query.from_user.id
     first_name = callback_query.from_user.first_name
-    caption = f"✨ **Hey [{first_name}](tg://user?id={user_id})!\nChoose a watermark option below.**"
+    caption = f'✨ <b>Hey <a href="tg://user?id={user_id}">{first_name}</a>!</b>\nChoose a watermark option below.'
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("🎥 Video", callback_data="video_watermark_command"), InlineKeyboardButton("📑 PDF", callback_data="pdf_watermark_command")],
         [InlineKeyboardButton("🔙 Back to Settings", callback_data="setttings")]
     ])
     await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
     ),
@@ -862,7 +872,7 @@ async def handle_watermark_menu(client, callback_query):
 async def handle_token_menu(client, callback_query):
     user_id = callback_query.from_user.id
     first_name = callback_query.from_user.first_name
-    caption = f"✨ **Hey [{first_name}](tg://user?id={user_id})!\nChoose a platform to set the token.**"
+    caption = f'✨ <b>Hey <a href="tg://user?id={user_id}">{first_name}</a>!</b>\nChoose a platform to set the token.'
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("Classplus", callback_data="cp_token_command")],
         [InlineKeyboardButton("Physics Wallah", callback_data="pw_token_command"), InlineKeyboardButton("Carrerwill", callback_data="cw_token_command")],
@@ -870,6 +880,7 @@ async def handle_token_menu(client, callback_query):
     ])
     await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
     ),
@@ -963,6 +974,7 @@ async def pdf_thumbnail_button(client, callback_query):
   caption = ("<b>⋅ This Feature is Not Working Yet ⋅</b>")
   await callback_query.message.edit_media(
     InputMediaPhoto(
+        parse_mode=enums.ParseMode.HTML,
         media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
         caption=caption
     ),
@@ -1094,6 +1106,7 @@ async def pdf_watermark_button(client, callback_query):
   caption = ("<b>⋅ This Feature is Not Working Yet ⋅</b>")
   await callback_query.message.edit_media(
     InputMediaPhoto(
+        parse_mode=enums.ParseMode.HTML,
         media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
         caption=caption
     ),
@@ -1231,6 +1244,7 @@ async def feature_button(client, callback_query):
   ])
   await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
     ),
@@ -1243,6 +1257,7 @@ async def pin_button(client, callback_query):
   caption = "📌 <b>Auto Pin Batch Name</b>\n\nAutomatically pins the batch name in your channel or group when processing starts from the first link."
   await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
       ),
@@ -1255,6 +1270,7 @@ async def watermark_button(client, callback_query):
   caption = "💧 <b>Custom Watermark</b>\n\nAdd your own watermark to videos for a personal touch."
   await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
       ),
@@ -1267,6 +1283,7 @@ async def restart_button(client, callback_query):
   caption = "🔄 <b>Reset Bot</b>\n\nUse /reset to restart the bot anytime."
   await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
       ),
@@ -1279,6 +1296,7 @@ async def handle_logs_command(client, callback_query):
   caption = "🖨️ <b>Bot Logs</b>\n\nUse /logs to receive the bot's activity log as a .txt file."
   await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
       ),
@@ -1291,6 +1309,7 @@ async def custom_button(client, callback_query):
   caption = "🖋️ <b>Custom File Name</b>\n\nSet a custom suffix added before the file extension during upload."
   await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
       ),
@@ -1303,6 +1322,7 @@ async def titlle_button(client, callback_query):
   caption = "🏷️ <b>Custom Title</b>\n\nAdd a custom title at the beginning of uploads.\n\n<b>Note:</b> The title must be enclosed in (parentheses). Works best with appx-style .txt files."
   await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
       ),
@@ -1315,6 +1335,7 @@ async def handle_broadcast_command(client, callback_query):
   caption = "📢 <b>Broadcast</b>\n\n◆ /broadcast — Send a message to all users.\n◆ /broadusers — View all users in the broadcast list."
   await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
       ),
@@ -1327,6 +1348,7 @@ async def editor_button(client, callback_query):
   caption = "📝 <b>Text File Creator</b>\n\n◆ /t2t — Convert text to a .txt file."
   await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
       ),
@@ -1339,6 +1361,7 @@ async def y2t_button(client, callback_query):
   caption = f"**YouTube Commands:**\n\n◆/y2t - 🔪 YouTube Playlist → .txt Converter\n◆/ytm - 🎶 YouTube → .mp3 downloader\n\n<blockquote><b>◆YouTube → .mp3 downloader\n01. Send YouTube Playlist.txt file\n02. Send single or multiple YouTube links set\neg.\n`https://www.youtube.com/watch?v=xxxxxx\nhttps://www.youtube.com/watch?v=yyyyyy`</b></blockquote>"
   await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
       ),
@@ -1352,6 +1375,7 @@ async def handle_html_command(client, callback_query):
   caption = "🌐 <b>HTML Converter</b>\n\n◆ /t2h — Convert a .txt file to .html format."
   await callback_query.message.edit_media(
     InputMediaPhoto(
+      parse_mode=enums.ParseMode.HTML,
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
       caption=caption
       ),
