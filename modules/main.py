@@ -36,6 +36,49 @@ from vars import api_url, api_token, token_cp, adda_token, photologo, photoyt, p
 from vars import API_ID, API_HASH, BOT_TOKEN, OWNER, CREDIT, CREDIT_LINK, OWNER_ID, OWNER_ID2, ADMINS, AUTH_MESSAGES, UPGRADE_TEXT, cookies_file_path
 import plan_manager as _pm
 from aiohttp import ClientSession
+
+# ── Default plan content (shown to all users; saved to DB on first boot) ───────
+_DEFAULT_PLAN_CONTENT = (
+    "💎 <b>𝐏𝐥𝐚𝐧𝐬 𝐟𝐨𝐫</b> {mention}\n\n"
+    "🎉 ᴡᴇʟᴄᴏᴍᴇ {first_name} ᴛᴏ ꜱᴜɢᴀʀ ᴅᴀᴅᴅʏ ᴅʀᴍ ʙᴏᴛ! 🎉\n\n"
+    "🔐 ʏᴏᴜ ᴄᴀɴ ᴀᴄᴄᴇꜱꜱ ᴀʟʟ ɴᴏɴ-ᴅʀᴍ + ᴀᴇꜱ ᴇɴᴄʀʏᴘᴛᴇᴅ ᴜʀʟꜱ\n"
+    "━━━━━━━━━━━━━━\n"
+    "🍁 <b>𝐋𝐨𝐠𝐢𝐧 𝐑𝐞𝐪𝐮𝐢𝐫𝐞𝐝</b>\n"
+    "• 📚 ᴀᴘᴘx ᴢɪᴘ + ᴇɴᴄʀʏᴘᴛᴇᴅ ᴜᴘᴛᴏ 𝟺 ᴜʜꜱ\n"
+    "• 🎓 ᴄʟᴀꜱꜱᴘʟᴜꜱ ᴅʀᴍ + ɴᴅʀᴍ\n"
+    "• 📚 ᴄᴀʀᴇᴇʀᴡɪʟʟ + ᴘᴅꜰ\n"
+    "• 🎓 ᴋʜᴀɴ ɢꜱ\n"
+    "• 🎓 ᴀʟʟᴇɴ\n"
+    "• 🎓 ᴋᴅ ᴄᴀᴍᴘᴜꜱ\n"
+    "• 🎓 ꜱᴛᴜᴅʏ ɪǫ ᴅʀᴍ\n"
+    "• 🚀 ᴀᴘᴘx + ᴀᴘᴘx ᴇɴᴄ ᴘᴅꜰ\n"
+    "• 🎓 ᴠɪᴍᴇᴏ ᴘʀᴏᴛᴇᴄᴛɪᴏɴ\n"
+    "• 🎓 ʙʀɪɢʜᴛᴄᴏᴠᴇ ᴘʀᴏᴛᴇᴄᴛɪᴏɴ\n"
+    "• 🎓 ᴠɪꜱɪᴏɴɪᴀꜱ ᴘʀᴏᴛᴇᴄᴛɪᴏɴ\n"
+    "• 🎓 ᴢᴏᴏᴍ ᴠɪᴅᴇᴏ\n"
+    "• 🎓 ᴜᴛᴋᴀʀꜱʜ ᴘʀᴏᴛᴇᴄᴛɪᴏɴ (ᴠɪᴅᴇᴏ + ᴘᴅꜰ)\n"
+    "• 🎓 ᴀʟʟ ɴᴏɴ-ᴅʀᴍ + ᴀᴇꜱ ᴇɴᴄʀʏᴘᴛᴇᴅ ᴜʀʟꜱ\n"
+    "• 🎓 ᴍᴘᴅ ᴜʀʟꜱ ɪꜰ ᴛʜᴇ ᴋᴇʏ ɪꜱ ᴋɴᴏᴡɴ\n"
+    "━━━━━━━━━━━━━━\n"
+    "🌷 <b>𝐖𝐢𝐭𝐡𝐨𝐮𝐭 𝐋𝐨𝐠𝐢𝐧</b> 🌷\n"
+    "• 🎓 ꜱᴛᴜᴅʏ ɪǫ\n"
+    "• 🎓 ᴘʜʏꜱɪᴄꜱᴡᴀʟʟᴀʜ\n"
+    "• 🎓 ᴜɴᴀᴄᴀᴅᴇᴍʏ\n"
+    "• 🎓 ᴋɢꜱ (ᴋʜᴀɴ ꜱɪʀ)\n"
+    "• 🎓 ɪꜰᴀꜱ ᴏɴʟɪɴᴇ\n"
+    "• 🎓 ꜱᴇʟᴇᴄᴛɪᴏɴᴡᴀʏ\n"
+    "• 🎓 ᴜᴛᴋᴀʀꜱʜ\n"
+    "• 🎓 ᴊʀꜰ ᴀᴅᴅᴀ\n"
+    "• 🎓 12ᴍɪɴ ᴛᴏ ᴄʟᴀᴛ\n"
+    "• 🎓 ʟᴇɢᴀʟ ᴇᴅɢᴇ\n"
+    "• 🎓 ʟᴀᴡ ᴘʀᴇᴘ ᴛᴜᴛᴏʀɪᴀʟ\n"
+    "• 🎓 ᴡᴇ ʟᴇᴀʀɴ\n"
+    "• 🎓 ʟᴇɢᴀʟ ᴀᴅᴅᴀ\n"
+    "• 🎓 ᴀᴅᴅᴀ247\n"
+    "━━━━━━━━━━━━━━\n"
+    "💰 <b>𝐏𝐫𝐢𝐜𝐞:</b> ₹𝟸,𝟻𝟶𝟶 (30 ᴅᴀʏꜱ)\n\n"
+    "📩 <b>𝐂𝐨𝐧𝐭𝐚𝐜𝐭:</b> ➥ 🌷 <a href='{credit_link}'>{credit}</a> 🌷"
+)
 from subprocess import getstatusoutput
 from pytube import YouTube
 from aiohttp import web
@@ -576,42 +619,30 @@ async def start(client, m: Message):
 
     # ── Step 5: final message ─────────────────────────────────────────────────
     _fn_safe = _html_safe.escape(first_name)
+    _mention = f'<a href="tg://user?id={user_id}">{_fn_safe}</a>'
+    _username = (m.from_user.username if m.from_user else "") or ""
 
+    # Plan shown to everyone; premium users get a badge on top
+    _plan_text = _render_plan(first_name, user_id, _username)
+    _badge = ""
     if is_authorized:
-        # Premium block — subscription details
-        _middle = "✅ You are a <b>Premium Member!</b>\n"
+        _badge = "✅ <b>You are a Premium Member!</b>\n"
         try:
             _info = db.get_user_expiry_info(user_id, bot_username)
             if _info and not is_admin:
-                _middle += (
+                _badge += (
                     f"<blockquote>📅 Expiry: <b>{_info['expiry_date']}</b>\n"
                     f"⏳ Remaining: <b>{_info['days_left']} days</b></blockquote>\n"
                 )
         except Exception:
             pass
-    else:
-        # Non-premium block — owner's plan content or contact fallback
-        _plan_content = db.get_setting("default_plan_content")
-        if _plan_content:
-            _middle = _pm.render_plan_content(_plan_content, {
-                "first_name": first_name, "last_name": "",
-                "username": (m.from_user.username if m.from_user else "") or "",
-                "user_id": user_id,
-                "mention": f'<a href="tg://user?id={user_id}">{_fn_safe}</a>',
-                "role": "User", "plan_name": "", "expiry_date": "", "days_left": "",
-            })
-        else:
-            _middle = (
-                "<blockquote>This is a premium DRM downloader bot.\n"
-                "Please contact the owner to get access.</blockquote>\n"
-            )
+        _badge += "\n"
 
-    _mention = f'<a href="tg://user?id={user_id}">{_fn_safe}</a>'
     await edit_msg(
         f"🌟 <b>Welcome, {_mention}!</b> 🌟\n\n"
-        f"{_middle}\n"
-        f"<b>✨ Tap the buttons below</b> to get started.\n\n"
-        f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>",
+        f"{_badge}"
+        f"{_plan_text}\n\n"
+        f"<b>✨ Tap the buttons below</b> to get started.",
         reply_markup=keyboard,
     )
   except Exception as _e:
@@ -741,12 +772,31 @@ async def upgrade_button(client, callback_query):
 
 # ── Shared plan display logic ─────────────────────────────────────────────────
 
-async def _show_plan_for_user_cq(client, cq):
-    """Show membership status when user taps 💳 Plans button."""
-    user_id    = cq.from_user.id
-    first_name = cq.from_user.first_name
+def _render_plan(first_name: str, user_id: int, username: str = "") -> str:
+    """Render the saved plan (or default) with user variables substituted."""
     import html as _h
     _fn_safe = _h.escape(first_name)
+    _mention = f'<a href="tg://user?id={user_id}">{_fn_safe}</a>'
+    raw = db.get_setting("default_plan_content") or _DEFAULT_PLAN_CONTENT
+    return _pm.render_plan_content(raw, {
+        "first_name": _fn_safe,
+        "last_name": "",
+        "username": username,
+        "user_id": user_id,
+        "mention": _mention,
+        "role": "User",
+        "plan_name": "",
+        "expiry_date": "",
+        "days_left": "",
+        "credit": CREDIT,
+        "credit_link": CREDIT_LINK,
+    })
+
+async def _show_plan_for_user_cq(client, cq):
+    """Show plan + membership badge when user taps 💳 Plans button."""
+    user_id    = cq.from_user.id
+    first_name = cq.from_user.first_name
+    username   = cq.from_user.username or ""
     keyboard   = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="back_to_main_menu")]])
     _is_owner_flag = user_id in {OWNER, OWNER_ID, OWNER_ID2}
 
@@ -756,22 +806,11 @@ async def _show_plan_for_user_cq(client, cq):
         bot_username = "bot"
 
     is_premium = _is_owner_flag or db.is_user_authorized(user_id, bot_username)
-    _mention = f'<a href="tg://user?id={user_id}">{_fn_safe}</a>'
+    plan_text = _render_plan(first_name, user_id, username)
 
-    if is_premium:
-        text = (
-            f"💎 <b>Membership Status</b>\n\n"
-            f"✅ Hey {_mention}, you are a <b>Premium Member!</b>\n\n"
-            f"<blockquote>You have full access to all features.\nEnjoy the bot!</blockquote>\n\n"
-            f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>"
-        )
-    else:
-        text = (
-            f"🔒 <b>Membership Status</b>\n\n"
-            f"❌ Hey {_mention}, you are <b>not a Premium Member.</b>\n\n"
-            f"<blockquote>Contact the owner to get premium access.</blockquote>\n\n"
-            f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>"
-        )
+    # Premium badge shown above the plan
+    badge = "✅ <b>You are a Premium Member!</b>\n\n" if is_premium else ""
+    text = badge + plan_text
 
     await cq.answer()
     try:
@@ -783,32 +822,20 @@ async def _show_plan_for_user_cq(client, cq):
                                   disable_web_page_preview=True)
 
 async def show_plan_for_user_msg(bot_client, m, bot_username: str):
-    """Show membership status as a new message (/plan command)."""
+    """Show plan + membership badge as a new message (/plan command)."""
     user_id    = (m.from_user.id if m.from_user else None) or m.chat.id
     first_name = (m.from_user.first_name if m.from_user else None) or "User"
-    import html as _h
-    _fn_safe = _h.escape(first_name)
-    _mention = f'<a href="tg://user?id={user_id}">{_fn_safe}</a>'
+    username   = (m.from_user.username if m.from_user else None) or ""
     _is_owner_flag = user_id in {OWNER, OWNER_ID, OWNER_ID2}
     is_premium = _is_owner_flag or db.is_user_authorized(user_id, bot_username)
 
-    if is_premium:
-        text = (
-            f"💎 <b>Membership Status</b>\n\n"
-            f"✅ Hey {_mention}, you are a <b>Premium Member!</b>\n\n"
-            f"<blockquote>You have full access to all features.\nEnjoy the bot!</blockquote>\n\n"
-            f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>"
-        )
-    else:
-        text = (
-            f"🔒 <b>Membership Status</b>\n\n"
-            f"❌ Hey {_mention}, you are <b>not a Premium Member.</b>\n\n"
-            f"<blockquote>Contact the owner to get premium access.</blockquote>\n\n"
-            f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>"
-        )
+    plan_text = _render_plan(first_name, user_id, username)
+    badge = "✅ <b>You are a Premium Member!</b>\n\n" if is_premium else ""
+    text = badge + plan_text
 
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("📞 Contact Owner", url=f"tg://openmessage?user_id={OWNER}")]])
-    await m.reply_text(text, reply_markup=keyboard, parse_mode=enums.ParseMode.HTML)
+    await m.reply_text(text, reply_markup=keyboard, parse_mode=enums.ParseMode.HTML,
+                       disable_web_page_preview=True)
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
 @bot.on_callback_query(filters.regex("setttings"))
@@ -1843,6 +1870,14 @@ async def _startup():
     """Runs after bot.start() — background tasks + notify + keep-alive via idle()."""
     asyncio.create_task(_auto_cleanup())
     asyncio.create_task(_http_poll_loop())   # ← HTTP fallback polling
+
+    # Seed default plan content if not already set by owner
+    try:
+        if not db.get_setting("default_plan_content"):
+            db.set_setting("default_plan_content", _DEFAULT_PLAN_CONTENT)
+            logging.warning("[STARTUP] Default plan content seeded to DB")
+    except Exception as _pe:
+        logging.warning(f"[STARTUP] Could not seed plan: {_pe}")
 
     # Webhook check (visible in logs, runs after bot.start)
     try:

@@ -132,17 +132,26 @@ def render_plan_content(content: str, user_data: dict) -> str:
     uname = user_data.get("username", "") or ""
     uid   = str(user_data.get("user_id", ""))
 
+    # Override mention if explicitly provided (already HTML)
+    _mention_override = user_data.get("mention")
+    if _mention_override and _mention_override.startswith("<a "):
+        _mention_val = _mention_override
+    else:
+        _mention_val = f'<a href="tg://user?id={uid}">{_html_mod.escape(first or uid)}</a>'
+
     variables = {
         "{first_name}":  _html_mod.escape(first),
         "{last_name}":   _html_mod.escape(last),
         "{full_name}":   _html_mod.escape((first + " " + last).strip()),
         "{username}":    _html_mod.escape(("@" + uname) if uname else ""),
         "{user_id}":     uid,
-        "{mention}":     f'<a href="tg://user?id={uid}">{_html_mod.escape(first or uid)}</a>',
+        "{mention}":     _mention_val,
         "{role}":        _html_mod.escape(user_data.get("role", "User")),
         "{plan_name}":   _html_mod.escape(user_data.get("plan_name", "")),
         "{expiry_date}": _html_mod.escape(str(user_data.get("expiry_date", ""))),
         "{days_left}":   _html_mod.escape(str(user_data.get("days_left", ""))),
+        "{credit}":      user_data.get("credit", ""),
+        "{credit_link}": user_data.get("credit_link", ""),
     }
 
     for var, val in variables.items():
