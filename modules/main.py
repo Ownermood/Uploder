@@ -1892,8 +1892,9 @@ async def status_command(client: Client, m: Message):
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
 @bot.on_message(filters.command("clean") & filters.private)
 async def clean_command(client: Client, m: Message):
-    if not db.is_admin(m.chat.id):
-        await m.reply_text("❌ Admin only command.")
+    _uid = (m.from_user.id if m.from_user else None) or m.chat.id
+    if _uid not in {OWNER, OWNER_ID, OWNER_ID2} and not db.is_admin(_uid):
+        await m.reply_text("❌ This command is restricted to admins.")
         return
     msg = await m.reply_text("🧹 Cleaning temp files...")
     cleaned = 0
@@ -1914,34 +1915,51 @@ async def clean_command(client: Client, m: Message):
 def reset_and_set_commands():
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/setMyCommands"
     requests.post(url, json={"commands": []})
-    commands = [
-        {"command": "start",       "description": "✅ Check Alive the Bot"},
-        {"command": "stop",        "description": "🚫 Stop the ongoing process"},
-        {"command": "id",          "description": "🆔 Get Your ID"},
-        {"command": "info",        "description": "ℹ️ Check Your Information"},
-        {"command": "plan",        "description": "📋 Check Your Plan"},
-        {"command": "status",      "description": "⚡ Bot Health & Disk Status"},
-        {"command": "clean",       "description": "🧹 Clean Temp Files (Admin)"},
-        {"command": "y2t",         "description": "🔪 YouTube → .txt Converter"},
-        {"command": "ytm",         "description": "🎶 YouTube → .mp3 downloader"},
-        {"command": "t2t",         "description": "📟 Text → .txt Generator"},
-        {"command": "t2h",         "description": "🌐 .txt → .html Converter"},
-        {"command": "cookies",     "description": "🍪 Upload YT Cookies"},
-        {"command": "getcookies",  "description": "🔍 Get Current YT Cookies"},
-        {"command": "logs",        "description": "🖨️ View Bot Activity"},
-        {"command": "add",         "description": "▶️ Add Authorisation"},
-        {"command": "remove",      "description": "⏸️ Remove Authorisation"},
-        {"command": "users",       "description": "👥 All Premium Users"},
-        {"command": "broadcast",   "description": "📢 Broadcast to All Users"},
-        {"command": "broadusers",  "description": "👁️ All Broadcasting Users"},
-        {"command": "reset",       "description": "✅ Reset the Bot"},
-        {"command": "addplan",     "description": "💳 Add Plan (Admin)"},
-        {"command": "delplan",     "description": "🗑️ Delete Plan (Admin)"},
-        {"command": "plans",       "description": "📋 View All Plans (Admin)"},
-        {"command": "whoami",      "description": "🆔 Debug: Show your Telegram ID"},
-        {"command": "clearplans",  "description": "🗑️ Clear All Plans (Admin)"},
+
+    # ── User commands ─────────────────────────────────────────────────────────
+    user_commands = [
+        {"command": "start",      "description": "🚀 Start the bot and view welcome screen"},
+        {"command": "plan",       "description": "💎 View your subscription status"},
+        {"command": "stop",       "description": "⛔ Cancel the current running task"},
+        {"command": "id",         "description": "🆔 Get your Telegram user or chat ID"},
+        {"command": "info",       "description": "ℹ️ View your Telegram account details"},
+        {"command": "status",     "description": "📊 View bot health and system status"},
+        {"command": "y2t",        "description": "▶️ Convert YouTube playlist to .txt file"},
+        {"command": "ytm",        "description": "🎵 Download YouTube audio as .mp3"},
+        {"command": "t2t",        "description": "📄 Convert text input to a .txt file"},
+        {"command": "t2h",        "description": "🌐 Convert .txt file to .html format"},
+        {"command": "cookies",    "description": "🍪 Upload YouTube cookies file"},
     ]
-    requests.post(url, json={"commands": commands})
+
+    # ── Admin commands ────────────────────────────────────────────────────────
+    admin_commands = [
+        {"command": "add",        "description": "➕ Add a user's premium access"},
+        {"command": "remove",     "description": "➖ Remove a user's premium access"},
+        {"command": "users",      "description": "👥 List all premium users"},
+        {"command": "broadcast",  "description": "📢 Broadcast a message to all users"},
+        {"command": "broadusers", "description": "👁️ List all users in broadcast list"},
+        {"command": "addplan",    "description": "💳 Set the default plan content"},
+        {"command": "plans",      "description": "📋 Preview the current saved plan"},
+        {"command": "delplan",    "description": "🗑️ Clear the default plan content"},
+        {"command": "clearplans", "description": "🧹 Clear all plans and reset settings"},
+        {"command": "getcookies", "description": "🔍 Download the current cookies file"},
+        {"command": "logs",       "description": "📋 Get the bot activity log file"},
+        {"command": "clean",      "description": "🗂️ Delete all temporary files"},
+        {"command": "reset",      "description": "🔄 Restart the bot process"},
+    ]
+
+    # Set user commands (visible to all)
+    requests.post(url, json={"commands": user_commands})
+
+    # Set admin commands scoped to private chats only for owner
+    for _admin_id in {OWNER, OWNER_ID, OWNER_ID2}:
+        try:
+            requests.post(url, json={
+                "commands": user_commands + admin_commands,
+                "scope": {"type": "chat", "chat_id": _admin_id},
+            })
+        except Exception:
+            pass
 
 
 def notify_owner():
