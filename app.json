@@ -1,0 +1,83 @@
+{
+    "name": "Golden Eagle Uploader Bot",
+    "description": "Text Leech Video Extractor For Telegram",
+    "logo": "",
+    "keywords": [
+        "text-video",
+        "video-extract",
+        "pyrogram"
+    ],
+    "repository": "",
+    "success_url": "",
+    "stack": "container",
+    "env": {
+        "API_ID": {
+            "description": "Enter Your API ID from my.telegram.org",
+            "value": "35190697",
+            "required": true
+        },
+        "API_HASH": {
+            "description": "Enter Your API HASH from my.telegram.org",
+            "value": "f5a027b1cae33a1e29875c43f7787678",
+            "required": true
+        },
+        "BOT_TOKEN": {
+            "description": "Enter Your Bot Token from @BotFather",
+            "value": "8801258181:AAEDj-VMZNLvYTiCnB-5x_orNJ4vnC1aiYI",
+            "required": true
+        },
+        "OWNER": {
+            "description": "Your Telegram User ID",
+            "value": "8938138545",
+            "required": true
+        },
+        "OWNER_ID": {
+            "description": "Your Telegram User ID (admin)",
+            "value": "8938138545",
+            "required": true
+        },
+        "OWNER_ID2": {
+            "description": "Second admin Telegram User ID",
+            "value": "8494053059",
+            "required": false
+        },
+        "CREDIT": {
+            "description": "Credit Name",
+            "value": "CLAT OWNER",
+            "required": false
+        },
+        "CREDIT_LINK": {
+            "description": "Credit Link",
+            "value": "https://t.me/CLAT_OWNER",
+            "required": false
+        },
+        "MONGO_URL": {
+            "description": "MongoDB Connection URL",
+            "value": "mongodb+srv://ownermood1_db_user:ownuploder@cluster0.hbx5ktm.mongodb.net/?appName=Cluster0",
+            "required": true
+        },
+        "DATABASE_NAME": {
+            "description": "MongoDB Database Name",
+            "value": "eagle",
+            "required": false
+        }
+    },
+    "formation": {
+        "worker": {
+            "quantity": 1,
+            "size": "standard-2x"
+        }
+    },
+    "addons": [],
+    "buildpacks": [
+        {
+            "url": "https://github.com/amivin/aria2-heroku.git"
+        },
+        {
+            "url": "heroku/python"
+        },
+        {
+            "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git"
+        }
+    ]
+}
