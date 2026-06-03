@@ -579,13 +579,13 @@ async def start(client, m: Message):
 
     if is_authorized:
         # Premium block — subscription details
-        _middle = f"✅ Tumhara <b>Premium</b> active hai!\n"
+        _middle = "✅ You are a <b>Premium Member!</b>\n"
         try:
             _info = db.get_user_expiry_info(user_id, bot_username)
             if _info and not is_admin:
                 _middle += (
                     f"<blockquote>📅 Expiry: <b>{_info['expiry_date']}</b>\n"
-                    f"⏳ Bacha hai: <b>{_info['days_left']} days</b></blockquote>\n"
+                    f"⏳ Remaining: <b>{_info['days_left']} days</b></blockquote>\n"
                 )
         except Exception:
             pass
@@ -602,14 +602,14 @@ async def start(client, m: Message):
             })
         else:
             _middle = (
-                f"<blockquote>Yeh ek premium DRM downloader bot hai.\n"
-                f"Premium access ke liye owner se contact karo.</blockquote>\n"
+                "<blockquote>This is a premium DRM downloader bot.\n"
+                "Please contact the owner to get access.</blockquote>\n"
             )
 
     await edit_msg(
         f"🌟 <b>Welcome, {_fn_safe}!</b> 🌟\n\n"
         f"{_middle}\n"
-        f"<b>✨ Commands</b> tap karo shuru karne ke liye.\n\n"
+        f"<b>✨ Tap the buttons below</b> to get started.\n\n"
         f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>",
         reply_markup=keyboard,
     )
@@ -626,7 +626,7 @@ async def start(client, m: Message):
 async def back_to_main_menu(client, callback_query):
     user_id = callback_query.from_user.id
     first_name = callback_query.from_user.first_name
-    caption = f"✨ **Welcome [{first_name}](tg://user?id={user_id}) in My uploader bot**"
+    caption = f"✨ **Welcome back, [{first_name}](tg://user?id={user_id})!**"
     keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton("✨ Commands", callback_data="cmd_command")],
             [InlineKeyboardButton("💎 Features", callback_data="feat_command"), InlineKeyboardButton("⚙️ Settings", callback_data="setttings")],
@@ -649,7 +649,7 @@ async def back_to_main_menu(client, callback_query):
 async def cmd(client, callback_query):
     user_id = callback_query.from_user.id
     first_name = callback_query.from_user.first_name
-    caption = f"✨ **Welcome [{first_name}](tg://user?id={user_id})\nChoose Button to select Commands**"
+    caption = f"✨ **Hey [{first_name}](tg://user?id={user_id})!\nChoose a section to explore commands.**"
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("🚻 User", callback_data="user_command"), InlineKeyboardButton("🚹 Owner", callback_data="owner_command")],
         [InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_to_main_menu")]
@@ -736,57 +736,12 @@ async def upgrade_button(client, callback_query):
 
 # ── Shared plan display logic ─────────────────────────────────────────────────
 
-async def _get_default_plan_text(first_name: str, user_id: int) -> str:
-    """Return owner-set plan HTML (from /addplan), variables replaced. No extra wrapper."""
-    import html as _h
-    raw = db.get_setting("default_plan_content")
-    if raw:
-        return _pm.render_plan_content(raw, {
-            "first_name": first_name, "last_name": "", "username": "",
-            "user_id": user_id,
-            "mention": f'<a href="tg://user?id={user_id}">{_h.escape(first_name)}</a>',
-            "role": "User", "plan_name": "", "expiry_date": "", "days_left": "",
-        })
-    # Fallback if no plan set yet
-    return (
-        f"👋 <b>Hello, {_h.escape(first_name)}!</b>\n\n"
-        f"<blockquote>Premium access ke liye owner se contact karo.</blockquote>\n\n"
-        f"👤 <a href='tg://user?id={OWNER}'>{CREDIT}</a>"
-    )
-
-async def _get_premium_plan_text(first_name: str, user_id: int, bot_username: str) -> str:
-    """Return subscription details HTML for a premium user."""
-    import html as _h
-    try:
-        info = db.get_user_expiry_info(user_id, bot_username)
-    except Exception:
-        info = None
-
-    if info:
-        days = info.get("days_left", 0)
-        expiry = info.get("expiry_date", "—")
-        status = "✅ Active" if info.get("is_active") else "❌ Expired"
-        days_text = f"{days} days" if days > 0 else "Expired"
-        return (
-            f"💎 <b>Your Premium Plan</b>\n\n"
-            f"<blockquote>"
-            f"👤 Name: <b>{_h.escape(first_name)}</b>\n"
-            f"🔘 Status: <b>{status}</b>\n"
-            f"📅 Expiry: <b>{expiry}</b>\n"
-            f"⏳ Remaining: <b>{days_text}</b>"
-            f"</blockquote>\n\n"
-            f"👤 <a href='tg://user?id={OWNER}'>{CREDIT}</a>"
-        )
-    return (
-        f"✅ <b>{_h.escape(first_name)}</b>, you have Premium access!\n\n"
-        f"<blockquote>Your subscription is active.\nContact owner for details.</blockquote>\n\n"
-        f"👤 <a href='tg://user?id={OWNER}'>{CREDIT}</a>"
-    )
-
 async def _show_plan_for_user_cq(client, cq):
-    """Show plan when user taps 💳 Plans button."""
+    """Show membership status when user taps 💳 Plans button."""
     user_id    = cq.from_user.id
     first_name = cq.from_user.first_name
+    import html as _h
+    _fn_safe = _h.escape(first_name)
     keyboard   = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="back_to_main_menu")]])
     _is_owner_flag = user_id in {OWNER, OWNER_ID, OWNER_ID2}
 
@@ -797,12 +752,21 @@ async def _show_plan_for_user_cq(client, cq):
 
     is_premium = _is_owner_flag or db.is_user_authorized(user_id, bot_username)
 
-    if is_premium and not _is_owner_flag:
-        text = await _get_premium_plan_text(first_name, user_id, bot_username)
+    if is_premium:
+        text = (
+            f"💎 <b>Membership Status</b>\n\n"
+            f"✅ <b>{_fn_safe}</b>, you are a <b>Premium Member!</b>\n\n"
+            f"<blockquote>You have full access to all features.\nEnjoy the bot!</blockquote>\n\n"
+            f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>"
+        )
     else:
-        text = await _get_default_plan_text(first_name, user_id)
+        text = (
+            f"🔒 <b>Membership Status</b>\n\n"
+            f"❌ <b>{_fn_safe}</b>, you are <b>not a Premium Member.</b>\n\n"
+            f"<blockquote>Contact the owner to get premium access.</blockquote>\n\n"
+            f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>"
+        )
 
-    # Send as plain text message — no photo wrapper, plan text shown exactly
     await cq.answer()
     try:
         await cq.message.edit_text(text, reply_markup=keyboard, parse_mode=enums.ParseMode.HTML,
@@ -813,24 +777,36 @@ async def _show_plan_for_user_cq(client, cq):
                                   disable_web_page_preview=True)
 
 async def show_plan_for_user_msg(bot_client, m, bot_username: str):
-    """Show plan info as a new message (command handler)."""
+    """Show membership status as a new message (/plan command)."""
     user_id    = (m.from_user.id if m.from_user else None) or m.chat.id
     first_name = (m.from_user.first_name if m.from_user else None) or "User"
+    import html as _h
+    _fn_safe = _h.escape(first_name)
     _is_owner_flag = user_id in {OWNER, OWNER_ID, OWNER_ID2}
     is_premium = _is_owner_flag or db.is_user_authorized(user_id, bot_username)
 
-    if is_premium and not _is_owner_flag:
-        text = await _get_premium_plan_text(first_name, user_id, bot_username)
+    if is_premium:
+        text = (
+            f"💎 <b>Membership Status</b>\n\n"
+            f"✅ <b>{_fn_safe}</b>, you are a <b>Premium Member!</b>\n\n"
+            f"<blockquote>You have full access to all features.\nEnjoy the bot!</blockquote>\n\n"
+            f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>"
+        )
     else:
-        text = await _get_default_plan_text(first_name, user_id)
+        text = (
+            f"🔒 <b>Membership Status</b>\n\n"
+            f"❌ <b>{_fn_safe}</b>, you are <b>not a Premium Member.</b>\n\n"
+            f"<blockquote>Contact the owner to get premium access.</blockquote>\n\n"
+            f"👤 <a href='{CREDIT_LINK}'>{CREDIT}</a>"
+        )
 
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("📞 Contact", url=f"tg://openmessage?user_id={OWNER}")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("📞 Contact Owner", url=f"tg://openmessage?user_id={OWNER}")]])
     await m.reply_text(text, reply_markup=keyboard, parse_mode=enums.ParseMode.HTML)
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
 @bot.on_callback_query(filters.regex("setttings"))
 async def settings_button(client, callback_query):
-    caption = "✨ <b>My Premium BOT Settings Panel</b> ✨"
+    caption = "⚙️ <b>Bot Settings</b>\n\nCustomize your upload experience below."
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("📝 Caption Style", callback_data="caption_style_command"), InlineKeyboardButton("🖋️ File Name", callback_data="file_name_command")],
         [InlineKeyboardButton("🌅 Thumbnail", callback_data="thummbnail_command")],
@@ -852,7 +828,7 @@ async def settings_button(client, callback_query):
 async def handle_thumbnail_command(client, callback_query):
     user_id = callback_query.from_user.id
     first_name = callback_query.from_user.first_name
-    caption = f"✨ **Welcome [{first_name}](tg://user?id={user_id})\nChoose Button to set Thumbnail**"
+    caption = f"✨ **Hey [{first_name}](tg://user?id={user_id})!\nChoose a thumbnail option below.**"
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("🎥 Video", callback_data="viideo_thumbnail_command"), InlineKeyboardButton("📑 PDF", callback_data="pddf_thumbnail_command")],
         [InlineKeyboardButton("🔙 Back to Settings", callback_data="setttings")]
@@ -869,7 +845,7 @@ async def handle_thumbnail_command(client, callback_query):
 async def handle_watermark_menu(client, callback_query):
     user_id = callback_query.from_user.id
     first_name = callback_query.from_user.first_name
-    caption = f"✨ **Welcome [{first_name}](tg://user?id={user_id})\nChoose Button to set Watermark**"
+    caption = f"✨ **Hey [{first_name}](tg://user?id={user_id})!\nChoose a watermark option below.**"
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("🎥 Video", callback_data="video_watermark_command"), InlineKeyboardButton("📑 PDF", callback_data="pdf_watermark_command")],
         [InlineKeyboardButton("🔙 Back to Settings", callback_data="setttings")]
@@ -886,7 +862,7 @@ async def handle_watermark_menu(client, callback_query):
 async def handle_token_menu(client, callback_query):
     user_id = callback_query.from_user.id
     first_name = callback_query.from_user.first_name
-    caption = f"✨ **Welcome [{first_name}](tg://user?id={user_id})\nChoose Button to set Token**"
+    caption = f"✨ **Hey [{first_name}](tg://user?id={user_id})!\nChoose a platform to set the token.**"
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("Classplus", callback_data="cp_token_command")],
         [InlineKeyboardButton("Physics Wallah", callback_data="pw_token_command"), InlineKeyboardButton("Carrerwill", callback_data="cw_token_command")],
@@ -1242,7 +1218,7 @@ async def handle_reset_cmd(client, callback_query):
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
 @bot.on_callback_query(filters.regex("feat_command"))
 async def feature_button(client, callback_query):
-  caption = "**✨ My Premium BOT Features :**"
+  caption = "💎 <b>Bot Features</b>\n\nExplore everything this bot can do."
   keyboard = InlineKeyboardMarkup([
       [InlineKeyboardButton("📌 Auto Pin Batch Name", callback_data="pin_command")],
       [InlineKeyboardButton("💧 Watermark", callback_data="watermark_command"), InlineKeyboardButton("🔄 Reset", callback_data="reset_command")],
@@ -1264,7 +1240,7 @@ async def feature_button(client, callback_query):
 @bot.on_callback_query(filters.regex("pin_command"))
 async def pin_button(client, callback_query):
   keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Feature", callback_data="feat_command")]])
-  caption = f"**Auto Pin 📌 Batch Name :**\n\nAutomatically Pins the Batch Name in Channel or Group, If Starting from the First Link."
+  caption = "📌 <b>Auto Pin Batch Name</b>\n\nAutomatically pins the batch name in your channel or group when processing starts from the first link."
   await callback_query.message.edit_media(
     InputMediaPhoto(
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
@@ -1276,7 +1252,7 @@ async def pin_button(client, callback_query):
 @bot.on_callback_query(filters.regex("watermark_command"))
 async def watermark_button(client, callback_query):
   keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Feature", callback_data="feat_command")]])
-  caption = f"**Custom Watermark :**\n\nSet Your Own Custom Watermark on Videos for Added Personalization."
+  caption = "💧 <b>Custom Watermark</b>\n\nAdd your own watermark to videos for a personal touch."
   await callback_query.message.edit_media(
     InputMediaPhoto(
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
@@ -1288,7 +1264,7 @@ async def watermark_button(client, callback_query):
 @bot.on_callback_query(filters.regex("reset_command"))
 async def restart_button(client, callback_query):
   keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Feature", callback_data="feat_command")]])
-  caption = f"**🔄 Reset Command:**\n\nIf You Want to Reset or Restart Your Bot, Simply Use Command /reset."
+  caption = "🔄 <b>Reset Bot</b>\n\nUse /reset to restart the bot anytime."
   await callback_query.message.edit_media(
     InputMediaPhoto(
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
@@ -1300,7 +1276,7 @@ async def restart_button(client, callback_query):
 @bot.on_callback_query(filters.regex("logs_command"))
 async def handle_logs_command(client, callback_query):
   keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Feature", callback_data="feat_command")]])
-  caption = f"**🖨️ Bot Working Logs:**\n\n◆/logs - Bot Send Working Logs in .txt File."
+  caption = "🖨️ <b>Bot Logs</b>\n\nUse /logs to receive the bot's activity log as a .txt file."
   await callback_query.message.edit_media(
     InputMediaPhoto(
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
@@ -1312,7 +1288,7 @@ async def handle_logs_command(client, callback_query):
 @bot.on_callback_query(filters.regex("custom_command"))
 async def custom_button(client, callback_query):
   keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Feature", callback_data="feat_command")]])
-  caption = f"**🖋️ Custom File Name:**\n\nSupport for Custom Name before the File Extension.\nAdd name ..when txt is uploading"
+  caption = "🖋️ <b>Custom File Name</b>\n\nSet a custom suffix added before the file extension during upload."
   await callback_query.message.edit_media(
     InputMediaPhoto(
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
@@ -1324,7 +1300,7 @@ async def custom_button(client, callback_query):
 @bot.on_callback_query(filters.regex("titlle_command"))
 async def titlle_button(client, callback_query):
   keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Feature", callback_data="feat_command")]])
-  caption = f"**Custom Title Feature :**\nAdd and customize titles at the starting\n**NOTE 📍 :** The Titile must enclosed within (Title), Best For appx's .txt file."
+  caption = "🏷️ <b>Custom Title</b>\n\nAdd a custom title at the beginning of uploads.\n\n<b>Note:</b> The title must be enclosed in (parentheses). Works best with appx-style .txt files."
   await callback_query.message.edit_media(
     InputMediaPhoto(
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
@@ -1336,7 +1312,7 @@ async def titlle_button(client, callback_query):
 @bot.on_callback_query(filters.regex("broadcast_command"))
 async def handle_broadcast_command(client, callback_query):
   keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Feature", callback_data="feat_command")]])
-  caption = f"**📢 Broadcasting Support:**\n\n◆/broadcast - 📢 Broadcast to All Users.\n◆/broadusers - 👁️ To See All Broadcasting User"
+  caption = "📢 <b>Broadcast</b>\n\n◆ /broadcast — Send a message to all users.\n◆ /broadusers — View all users in the broadcast list."
   await callback_query.message.edit_media(
     InputMediaPhoto(
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
@@ -1348,7 +1324,7 @@ async def handle_broadcast_command(client, callback_query):
 @bot.on_callback_query(filters.regex("txt_maker_command"))
 async def editor_button(client, callback_query):
   keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Feature", callback_data="feat_command")]])
-  caption = f"**🤖 Available Commands 🗓️**\n◆/t2t for text to .txt file\n"
+  caption = "📝 <b>Text File Creator</b>\n\n◆ /t2t — Convert text to a .txt file."
   await callback_query.message.edit_media(
     InputMediaPhoto(
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
@@ -1373,7 +1349,7 @@ async def y2t_button(client, callback_query):
 @bot.on_callback_query(filters.regex("html_command"))
 async def handle_html_command(client, callback_query):
   keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Feature", callback_data="feat_command")]])
-  caption = f"**HTML Commands:**\n\n◆/t2h - 🌐 .txt → .html Converter"
+  caption = "🌐 <b>HTML Converter</b>\n\n◆ /t2h — Convert a .txt file to .html format."
   await callback_query.message.edit_media(
     InputMediaPhoto(
       media="https://i.ibb.co/zTPJFct8/photo-2025-04-25-12-55-01-7497233558289776672.jpg",
@@ -1529,10 +1505,10 @@ async def admin_addplan(client, m):
         return
     chat_id = m.chat.id
     prompt = await m.reply_text(
-        "📩 <b>Plan text bhejo abhi.</b>\n\n"
-        "Jo bhi message bhejoge — <b>exactly wahi save hoga.</b>\n"
-        "Bold, italic, emoji, blockquote — sab support hai.\n\n"
-        "<i>Cancel karna ho toh /cancel bhejo.</i>",
+        "📩 <b>Send your plan text now.</b>\n\n"
+        "Whatever message you send — <b>it will be saved exactly as-is.</b>\n"
+        "Bold, italic, emoji, blockquote — all formatting is supported.\n\n"
+        "<i>To cancel, send /cancel.</i>",
         parse_mode=enums.ParseMode.HTML,
     )
     try:
@@ -1540,10 +1516,10 @@ async def admin_addplan(client, m):
     except (asyncio.TimeoutError, TimeoutError):
         try: await prompt.delete()
         except Exception: pass
-        await m.reply_text("⏰ Timeout. /addplan cancel.")
+        await m.reply_text("⏰ Timed out. Use /addplan again.")
         return
     if content_msg.text and content_msg.text.strip() in ("/cancel", "/stop"):
-        await m.reply_text("❌ Cancel.")
+        await m.reply_text("❌ Cancelled.")
         return
     raw_dict = content_msg._msg if hasattr(content_msg, "_msg") else {}
     content_html = _pm.msg_to_html(raw_dict) if raw_dict else (content_msg.text or "")
@@ -1551,7 +1527,7 @@ async def admin_addplan(client, m):
     logging.warning(f"[PLAN] saved by={chat_id} len={len(content_html)}")
     try: await prompt.delete()
     except Exception: pass
-    await m.reply_text("✅ <b>Plan save ho gaya!</b>", parse_mode=enums.ParseMode.HTML)
+    await m.reply_text("✅ <b>Plan saved successfully!</b>", parse_mode=enums.ParseMode.HTML)
 
 # ── /plans — owner ko current saved plan dikhao ───────────────────────────────
 @bot.on_message(filters.command("plans"))
@@ -1562,7 +1538,7 @@ async def admin_listplans(client, m):
     content = db.get_setting("default_plan_content")
     if not content:
         await m.reply_text(
-            "❌ <b>Koi plan save nahi hai.</b>\n\n/addplan bhejo plan set karne ke liye.",
+            "❌ <b>No plan saved yet.</b>\n\nUse /addplan to set one.",
             parse_mode=enums.ParseMode.HTML,
         )
         return
@@ -1583,8 +1559,8 @@ async def admin_clearplans(client, m):
         db.set_setting("welcome_plan", "")
         db.set_setting("welcome_plan_custom", "")
         await m.reply_text(
-            "🗑 <b>Saare plans clear ho gaye!</b>\n\n"
-            "Ab /addplan se naya plan set karo.",
+            "🗑 <b>All plans cleared!</b>\n\n"
+            "Use /addplan to set a new one.",
             parse_mode=enums.ParseMode.HTML,
         )
     except Exception as e:
@@ -1600,14 +1576,14 @@ async def admin_delplan(client, m):
     parts = m.text.split(None, 1)
     if len(parts) < 2:
         db.set_setting("default_plan_content", "")
-        await m.reply_text("✅ Default plan clear ho gaya.")
+        await m.reply_text("✅ Default plan cleared.")
         return
     name = parts[1].strip()
     ok = db.delete_plan(name)
     if ok:
         await m.reply_text(f"✅ Plan '{name}' deleted.")
     else:
-        await m.reply_text(f"❌ '{name}' nahi mila. /plans se check karo.")
+        await m.reply_text(f"❌ '{name}' not found. Use /plans to check.")
 
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
 @bot.on_message(filters.command(["reset"]))
@@ -1616,7 +1592,7 @@ async def restart_handler(_, m):
     if _uid not in {OWNER, OWNER_ID, OWNER_ID2}:
         return
     else:
-        await m.reply_text("𝐁𝐨𝐭 𝐢𝐬 𝐑𝐞𝐬𝐞𝐭𝐢𝐧𝐠...")
+        await m.reply_text("🔄 Restarting the bot, please wait...")
         os.execl(sys.executable, sys.executable, *sys.argv)
 
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
@@ -1626,11 +1602,10 @@ async def cancel_handler(client: Client, m: Message):
     if not db.is_user_authorized(m.chat.id, bot_username):
         print(f"User ID not authorized", m.chat.id)
         await bot.send_message(
-            m.chat.id, 
-            f"<blockquote>__**Oopss! You are not a Premium member**__\n"
-            f"__**PLEASE /upgrade YOUR PLAN**__\n"
-            f"__**Send me your user id for authorization**__\n"
-            f"__**Your User id**__ - `{m.chat.id}`</blockquote>\n"
+            m.chat.id,
+            f"<blockquote>⚠️ <b>You are not a Premium Member.</b>\n"
+            f"Please contact the owner to get access.\n"
+            f"Your User ID: <code>{m.chat.id}</code></blockquote>"
         )
         return
     else:
@@ -1821,7 +1796,7 @@ def notify_owner():
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     data = {
         "chat_id": OWNER,
-        "text": "🚀 𝐁𝐨𝐭 𝐑𝐞𝐬𝐭𝐚𝐫𝐭𝐞𝐝 𝐒𝐮𝐜𝐜𝐞𝐬𝐬𝐟𝐮𝐥𝐥𝐲 ✅\n⚡ Upgraded Engine v2.0 Active"
+        "text": "🚀 <b>Bot restarted successfully!</b>\n⚡ All systems are up and running."
     }
     requests.post(url, data=data)
 
@@ -1876,7 +1851,7 @@ async def _startup():
             try:
                 await bot.send_message(
                     _admin,
-                    f"✅ @{me.username} is LIVE!\nSend /start to test."
+                    f"✅ <b>@{me.username} is live!</b>\nSend /start to begin."
                 )
                 break
             except Exception as e:
