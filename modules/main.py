@@ -1529,7 +1529,7 @@ async def admin_addplan(client, m):
     except Exception: pass
     await m.reply_text("✅ <b>Plan saved successfully!</b>", parse_mode=enums.ParseMode.HTML)
 
-# ── /plans — owner ko current saved plan dikhao ───────────────────────────────
+# ── /plans — show the owner their current saved plan ─────────────────────────
 @bot.on_message(filters.command("plans"))
 async def admin_listplans(client, m):
     if not _is_owner(m):
@@ -1547,7 +1547,7 @@ async def admin_listplans(client, m):
         parse_mode=enums.ParseMode.HTML,
     )
 
-# ── /clearplans — DB se saare purane plans delete karo ────────────────────────
+# ── /clearplans — delete all saved plans from the database ───────────────────
 @bot.on_message(filters.command("clearplans"))
 async def admin_clearplans(client, m):
     if not _is_owner(m):
@@ -1605,7 +1605,8 @@ async def cancel_handler(client: Client, m: Message):
             m.chat.id,
             f"<blockquote>⚠️ <b>You are not a Premium Member.</b>\n"
             f"Please contact the owner to get access.\n"
-            f"Your User ID: <code>{m.chat.id}</code></blockquote>"
+            f"Your User ID: <code>{m.chat.id}</code></blockquote>",
+            parse_mode=enums.ParseMode.HTML,
         )
         return
     else:
@@ -1796,7 +1797,8 @@ def notify_owner():
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     data = {
         "chat_id": OWNER,
-        "text": "🚀 <b>Bot restarted successfully!</b>\n⚡ All systems are up and running."
+        "text": "🚀 <b>Bot restarted successfully!</b>\n⚡ All systems are up and running.",
+        "parse_mode": "HTML",
     }
     requests.post(url, data=data)
 
@@ -1851,7 +1853,8 @@ async def _startup():
             try:
                 await bot.send_message(
                     _admin,
-                    f"✅ <b>@{me.username} is live!</b>\nSend /start to begin."
+                    f"✅ <b>@{me.username} is live!</b>\nSend /start to begin.",
+                    parse_mode=enums.ParseMode.HTML,
                 )
                 break
             except Exception as e:
