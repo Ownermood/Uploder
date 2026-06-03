@@ -261,7 +261,11 @@ async def drm_handler(bot: Client, m: Message):
             bot_username = (await bot.get_me()).username
             if not db.is_user_authorized(m.chat.id, bot_username):
                 print(f"User ID not authorized", m.chat.id)
-                await bot.send_message(m.chat.id, f"<blockquote>__**Oopss! You are not a Premium member\nPLEASE /upgrade YOUR PLAN\nSend me your user id for authorization\nYour User id**__ - `{m.chat.id}`</blockquote>\n")
+                await bot.send_message(
+                    m.chat.id,
+                    f"<blockquote>⚠️ <b>Access Denied</b>\n\nYou are not a Premium Member.\nContact the owner to get access.\n\nYour ID: <code>{m.chat.id}</code></blockquote>",
+                    parse_mode="html",
+                )
                 return
 
     autotopic_mode = False
@@ -300,18 +304,19 @@ async def drm_handler(bot: Client, m: Message):
                 other_count += 1
                     
     if not links:
-        await m.reply_text("<b>🔹Invalid Input.</b>")
+        await m.reply_text("❌ <b>No valid links found.</b>\n\nPlease send a .txt file or a valid URL.", parse_mode="html")
         return
 
     if m.document:
-        editable = await m.reply_text(f"** Total 🔗 Links Found are {len(links)}\n"
-               f"<blockquote>\n"
-               f"📁 PDF : {pdf_count}  🖼️ IMG : {img_count}  🛡️ V2 : {v2_count} \n"
-               f"🧩 ZIP : {zip_count}  🔏 DRM : {drm_count}  🎧 M3U8 : {m3u8_count}\n"
-               f"📦 MPD : {mpd_count}  📺 YT : {yt_count}\n"
-               f"🌟 OTHER : {other_count}\n"
+        editable = await m.reply_text(
+               f"<b>🔗 {len(links)} Links Found</b>\n"
+               f"<blockquote>"
+               f"📁 PDF: {pdf_count}  🖼️ IMG: {img_count}  🛡️ V2: {v2_count}\n"
+               f"🧩 ZIP: {zip_count}  🔏 DRM: {drm_count}  🎧 M3U8: {m3u8_count}\n"
+               f"📦 MPD: {mpd_count}  📺 YT: {yt_count}  🌟 Other: {other_count}"
                f"</blockquote>\n"
-               f"Send From Where You Want to download Initial Is <b>1</b>")
+               f"Enter the starting index (default: <b>1</b>):",
+               parse_mode="html")
         try:
             input0: Message = await bot.listen(editable.chat.id, timeout=20)
             raw_text = input0.text
@@ -320,12 +325,12 @@ async def drm_handler(bot: Client, m: Message):
             raw_text = '1'
     
         if int(raw_text) > len(links) :
-            await editable.edit(f"**🔹Enter number in range of Index (01-{len(links)})**")
-            processing_request = False  # Reset the processing flag
-            await m.reply_text("**🔹Exiting Task......  **")
+            await editable.edit(f"❌ <b>Invalid index.</b> Please enter a number between 1 and {len(links)}.", parse_mode="html")
+            processing_request = False
+            await m.reply_text("⛔ Task cancelled.")
             return
 
-        await editable.edit(f"**Enter Batch Name or send /d**")
+        await editable.edit("📝 <b>Enter Batch Name</b> or send /d to use the file name:", parse_mode="html")
         try:
             input1: Message = await bot.listen(editable.chat.id, timeout=20)
             raw_text0 = input1.text
@@ -337,7 +342,7 @@ async def drm_handler(bot: Client, m: Message):
             b_name = file_name.replace('_', ' ')
         else:
             b_name = raw_text0
-        await editable.edit("**🔹Enter __PW/CP/CW__ Working Token For 𝐌𝐏𝐃 𝐔𝐑𝐋 or send /d**")
+        await editable.edit("🔑 <b>Enter your PW / CP / CW token</b> for MPD URLs, or send /d to skip:", parse_mode="html")
         try:
             input4: Message = await bot.listen(editable.chat.id, timeout=30)
             raw_text4 = input4.text
@@ -346,7 +351,10 @@ async def drm_handler(bot: Client, m: Message):
             raw_text4 = '/d'
 
         # --- AUTOTOPIC FEATURE ---
-        await editable.edit("**Do you want to upload Topic Wise?\nSend /yes or /d**\n\n<blockquote><i>⚠️ Warning:- You must make the bot admin and give manage topics permission in the Group/Channel.</i></blockquote>")
+        await editable.edit(
+            "📂 <b>Upload Topic-Wise?</b>\n\nSend /yes to enable, or /d to skip.\n\n"
+            "<blockquote>⚠️ The bot must be an admin with <b>Manage Topics</b> permission in the group/channel.</blockquote>",
+            parse_mode="html")
         try:
             input_topic: Message = await bot.listen(editable.chat.id, timeout=30)
             raw_topic = input_topic.text
@@ -358,7 +366,10 @@ async def drm_handler(bot: Client, m: Message):
         # -------------------------
 
         # --- TOPIC PINNING FEATURE ---
-        await editable.edit("**Do you want to pin topics if yes send /y or /d**\n\n<blockquote><i>If enabled, the bot will send the topic name as text and pin it before uploading its files.</i></blockquote>")
+        await editable.edit(
+            "📌 <b>Pin Topics?</b>\n\nSend /y to enable, or /d to skip.\n\n"
+            "<blockquote>When enabled, the bot sends the topic name as a pinned message before uploading its files.</blockquote>",
+            parse_mode="html")
         try:
             input_pin: Message = await bot.listen(editable.chat.id, timeout=30)
             raw_pin = input_pin.text
@@ -369,7 +380,12 @@ async def drm_handler(bot: Client, m: Message):
         pin_topic_mode = True if "/y" in raw_pin.lower() else False
         # -----------------------------
 
-        await editable.edit("__**⚠️Provide the Channel ID or send /d__\n\n<blockquote><i>🔹 Make me an admin to upload.\n🔸Send /id in your channel to get the Channel ID.\n\nExample: Channel ID = -100XXXXXXXXXXX</i></blockquote>\n**")
+        await editable.edit(
+            "📡 <b>Enter Channel / Group ID</b> or send /d to upload here.\n\n"
+            "<blockquote>🔹 Make the bot an admin in your channel.\n"
+            "🔸 Send /id in your channel to get its ID.\n\n"
+            "Example: <code>-100XXXXXXXXXXX</code></blockquote>",
+            parse_mode="html")
         try:
             input7: Message = await bot.listen(editable.chat.id, timeout=20)
             raw_text7 = input7.text
@@ -393,7 +409,17 @@ async def drm_handler(bot: Client, m: Message):
             b_name = '**Link Input**'
             await m.delete()
         else:
-            editable = await m.reply_text(f"╭━━━━❰ᴇɴᴛᴇʀ ʀᴇꜱᴏʟᴜᴛɪᴏɴ❱━━➣ \n┣━━⪼ send `144`  for 144p\n┣━━⪼ send `240`  for 240p\n┣━━⪼ send `360`  for 360p\n┣━━⪼ send `480`  for 480p\n┣━━⪼ send `720`  for 720p\n┣━━⪼ send `1080` for 1080p\n╰━━⌈⚡[🦋`{CREDIT}`🦋]⚡⌋━━➣ ")
+            editable = await m.reply_text(
+                "🎬 <b>Select Video Quality</b>\n\n"
+                "<blockquote>"
+                "Send <code>144</code>  →  144p\n"
+                "Send <code>240</code>  →  240p\n"
+                "Send <code>360</code>  →  360p\n"
+                "Send <code>480</code>  →  480p\n"
+                "Send <code>720</code>  →  720p (HD)\n"
+                "Send <code>1080</code> →  1080p (Full HD)"
+                "</blockquote>",
+                parse_mode="html")
             input2: Message = await bot.listen(chat_id=editable.chat.id, filters=filters.text & filters.user(m.from_user.id))
             raw_text2 = input2.text
             quality = f"{raw_text2}p"
@@ -432,16 +458,16 @@ async def drm_handler(bot: Client, m: Message):
         if m.document and raw_text == "1":
             batch_message = await bot.send_message(chat_id=channel_id, text=f"<blockquote><b>🎯Target Batch : {b_name}</b></blockquote>")
             if "/d" not in raw_text7:
-                await bot.send_message(chat_id=m.chat.id, text=f"<blockquote><b><i>🎯Target Batch : {b_name}</i></b></blockquote>\n\n🔄 Your Task is under processing, please check your Set Channel📱. Once your task is complete, I will inform you 📩")
+                await bot.send_message(chat_id=m.chat.id, text=f"<blockquote><b>🎯 Batch: {b_name}</b></blockquote>\n\n⏳ Processing your task. Check your channel for uploads. I'll notify you when done! 📩", parse_mode="html")
                 await bot.pin_chat_message(channel_id, batch_message.id)
                 message_id = batch_message.id
                 pinning_message_id = message_id + 1
                 await bot.delete_messages(channel_id, pinning_message_id)
         else:
              if "/d" not in raw_text7:
-                await bot.send_message(chat_id=m.chat.id, text=f"<blockquote><b><i>🎯Target Batch : {b_name}</i></b></blockquote>\n\n🔄 Your Task is under processing, please check your Set Channel📱. Once your task is complete, I will inform you 📩")
+                await bot.send_message(chat_id=m.chat.id, text=f"<blockquote><b>🎯 Batch: {b_name}</b></blockquote>\n\n⏳ Processing your task. Check your channel for uploads. I'll notify you when done! 📩", parse_mode="html")
     except Exception as e:
-        await m.reply_text(f"**Fail Reason »**\n<blockquote><i>{e}</i></blockquote>\n\n✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ {CREDIT}🌟`")
+        await m.reply_text(f"❌ <b>Failed to start task</b>\n<blockquote><i>{e}</i></blockquote>", parse_mode="html")
 
         
     failed_count = 0

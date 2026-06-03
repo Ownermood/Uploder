@@ -376,7 +376,7 @@ def process_zip_to_video(url, name):
 
     if not m3u8_path:
         shutil.rmtree(temp_dir)
-        raise Exception("❌ m3u8 file nahi mili")
+        raise Exception("❌ m3u8 file not found")
 
     # 4️⃣ m3u8 → MP4 (same referer ffmpeg me bhi)
     cmd = [
