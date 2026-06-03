@@ -62,14 +62,18 @@ async def add_user_cmd(client: Client, message: Message):
         if success:
             # Format expiry date
             expiry_str = expiry_date.strftime("%d-%m-%Y %H:%M:%S")
-            
-            # Send success message to admin using template
+            _mention = f'<a href="tg://user?id={user_id}">{name}</a>'
+
+            # Send success message to admin
             await message.reply_text(
-                AUTH_MESSAGES["user_added"].format(
-                    name=name,
-                    user_id=user_id,
-                    expiry_date=expiry_str
-                )
+                f"<b>✅ User Added Successfully!</b>\n\n"
+                f"<blockquote>"
+                f"👤 Name  ›  {_mention}\n"
+                f"🆔 ID  ›  <code>{user_id}</code>\n"
+                f"📅 Expiry  ›  <b>{expiry_str}</b>"
+                f"</blockquote>",
+                parse_mode="html",
+                disable_web_page_preview=True,
             )
 
             # Try to notify the user using template
@@ -113,10 +117,17 @@ async def remove_user_cmd(client: Client, message: Message):
         
         # Remove user from database
         _me = await client.get_me()
+        _mention = f'<a href="tg://user?id={user_id}">{user_id}</a>'
         if db.remove_user(user_id, _me.username):
-            await message.reply_text(f"✅ User {user_id} removed.")
+            await message.reply_text(
+                f"<b>✅ User Removed</b>\n\n👤 {_mention} has been removed.",
+                parse_mode="html", disable_web_page_preview=True,
+            )
         else:
-            await message.reply_text(f"❌ User {user_id} not found.")
+            await message.reply_text(
+                f"<b>❌ Not Found</b>\n\n👤 {_mention} was not found.",
+                parse_mode="html", disable_web_page_preview=True,
+            )
 
     except ValueError:
         await message.reply_text("❌ Invalid user ID. Use numbers only.")
@@ -140,22 +151,23 @@ async def list_users_cmd(client: Client, message: Message):
             return
 
         # Format user list
-        user_list = "**📝 Users List**\n\n"
+        user_list = "<b>📝 Premium Users</b>\n\n"
         for user in users:
             expiry = user['expiry_date']
             if isinstance(expiry, str):
                 expiry = datetime.strptime(expiry, "%Y-%m-%d %H:%M:%S")
             days_left = (expiry - datetime.now()).days
-            
+            _uid = user['user_id']
+            _name = user.get('name', str(_uid))
+            _mention = f'<a href="tg://user?id={_uid}">{_name}</a>'
             user_list += (
-                f"• Name: {user['name']}\n"
-                f"• ID: {user['user_id']}\n"
-                f"• Days Left: {days_left}\n"
-                f"• Expires: {expiry.strftime('%d-%m-%Y')}\n"
-                f"───────────────\n"
+                f"👤 {_mention}\n"
+                f"🆔 <code>{_uid}</code>\n"
+                f"⏳ {days_left} days left  |  📅 {expiry.strftime('%d-%m-%Y')}\n"
+                f"━━━━━━━━━━━━━━\n"
             )
 
-        await message.reply_text(user_list)
+        await message.reply_text(user_list, parse_mode="html", disable_web_page_preview=True)
 
     except Exception as e:
         await message.reply_text(f"❌ Error: {str(e)}")
@@ -176,11 +188,16 @@ async def my_plan_cmd(client: Client, message: Message):
             expiry = datetime.strptime(expiry, "%Y-%m-%d %H:%M:%S")
         days_left = (expiry - datetime.now()).days
 
+        _uid = message.from_user.id
+        _name = user.get('name', str(_uid))
+        _mention = f'<a href="tg://user?id={_uid}">{_name}</a>'
         await message.reply_text(
-            f"**📱 Plan Details**\n\n"
-            f"• Name: {user['name']}\n"
-            f"• Days Left: {days_left}\n"
-            f"• Expires: {expiry.strftime('%d-%m-%Y')}"
+            f"<b>📋 Plan Details</b>\n\n"
+            f"👤 {_mention}\n"
+            f"⏳ <b>{days_left} days</b> remaining\n"
+            f"📅 Expires: <b>{expiry.strftime('%d-%m-%Y')}</b>",
+            parse_mode="html",
+            disable_web_page_preview=True,
         )
 
     except Exception as e:

@@ -87,18 +87,18 @@ async def broadusers_handler(client: Client, message: Message):
         user_id = user['user_id']
         try:
             user_obj = await client.get_users(int(user_id))
-            fname = user_obj.first_name if user_obj.first_name else " "
-            user_infos.append(f"[{user_id}](tg://openmessage?user_id={user_id}) | `{fname}`")
+            fname = user_obj.first_name if user_obj.first_name else str(user_id)
+            _mention = f'<a href="tg://user?id={user_id}">{fname}</a>'
+            user_infos.append(f"👤 {_mention}  <code>{user_id}</code>")
         except Exception:
-            user_infos.append(f"[{user_id}](tg://openmessage?user_id={user_id})")
+            user_infos.append(f'👤 <a href="tg://user?id={user_id}">{user_id}</a>  <code>{user_id}</code>')
 
     total = len(user_infos)
     text = (
-        f"<blockquote><b>Total Users: {total}</b></blockquote>\n\n"
-        "<b>Users List:</b>\n"
+        f"<blockquote><b>📢 Broadcast Users — Total: {total}</b></blockquote>\n\n"
         + "\n".join(user_infos)
     )
-    await message.reply_text(text)
+    await message.reply_text(text, parse_mode="html", disable_web_page_preview=True)
     
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,

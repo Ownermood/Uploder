@@ -456,7 +456,14 @@ async def _dispatch_http(upd: dict):
             await start(bot, m)
         elif cmd_part == "whoami":
             _uid2 = (m.from_user.id if m.from_user else None) or m.chat.id
-            await m.reply_text(f"🆔 Your ID: `{_uid2}`\nOWNER={OWNER} OWNER_ID={OWNER_ID} OWNER_ID2={OWNER_ID2}")
+            _fn2  = (m.from_user.first_name if m.from_user else None) or "User"
+            import html as _wh
+            _mention2 = f'<a href="tg://user?id={_uid2}">{_wh.escape(_fn2)}</a>'
+            await m.reply_text(
+                f"<blockquote>👤 {_mention2}\n🆔 ID  ›  <code>{_uid2}</code></blockquote>",
+                parse_mode=enums.ParseMode.HTML,
+                disable_web_page_preview=True,
+            )
         elif cmd_part == "ping":
             await ping(bot, m)
         elif cmd_part == "add":
@@ -1557,35 +1564,51 @@ def _wire_cb_handlers():
 
 @bot.on_message(filters.command(["id"]))
 async def id_command(client, message: Message):
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(text="Send to Owner", url=f"tg://openmessage?user_id={OWNER}")]])
+    import html as _ih
     chat_id = message.chat.id
-    text = f"<blockquote expandable><b>The ID of this chat id is:</b></blockquote>\n`{chat_id}`"
-    
-    if str(chat_id).startswith("-100"):
-        await message.reply_text(text)
+    is_group = str(chat_id).startswith("-100")
+    if is_group:
+        text = f"<blockquote>🆔 <b>Chat ID</b>  ›  <code>{chat_id}</code></blockquote>"
+        await message.reply_text(text, parse_mode=enums.ParseMode.HTML)
     else:
-        await message.reply_text(text, reply_markup=keyboard)
+        _uid = message.from_user.id if message.from_user else chat_id
+        _fn  = _ih.escape(message.from_user.first_name if message.from_user else "User")
+        _mention = f'<a href="tg://user?id={_uid}">{_fn}</a>'
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(text="📤 Send to Owner", url=f"tg://openmessage?user_id={OWNER}")]])
+        text = (
+            f"<blockquote>"
+            f"👤 {_mention}\n"
+            f"🆔 <b>Your ID</b>  ›  <code>{_uid}</code>"
+            f"</blockquote>"
+        )
+        await message.reply_text(text, parse_mode=enums.ParseMode.HTML, reply_markup=keyboard)
 
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
 
 @bot.on_message(filters.private & filters.command(["info"]))
 async def info(bot: Client, update: Message):
+    import html as _ih
+    _uid  = update.from_user.id
+    _fn   = _ih.escape(update.from_user.first_name or "")
+    _ln   = _ih.escape(update.from_user.last_name or "")
+    _full = (_fn + (" " + _ln if _ln else "")).strip()
+    _uname = update.from_user.username
+    _mention = f'<a href="tg://user?id={_uid}">{_full}</a>'
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(text="📞 Contact", url=f"tg://openmessage?user_id={OWNER}")]])
     text = (
         f"╭────────────────╮\n"
-        f"│✨ **Your Telegram Info**✨ \n"
+        f"│ ✨ <b>Your Telegram Info</b> ✨\n"
         f"├────────────────\n"
-        f"├🔹**Name :** `{update.from_user.first_name} {update.from_user.last_name if update.from_user.last_name else 'None'}`\n"
-        f"├🔹**User ID :** @{update.from_user.username}\n"
-        f"├🔹**TG ID :** `{update.from_user.id}`\n"
-        f"├🔹**Profile :** {update.from_user.mention}\n"
+        f"├🔹 <b>Name</b>    ›  {_mention}\n"
+        f"├🔹 <b>Username</b> ›  {'@' + _uname if _uname else '—'}\n"
+        f"├🔹 <b>TG ID</b>   ›  <code>{_uid}</code>\n"
         f"╰────────────────╯"
     )
-    
-    await update.reply_text(        
+    await update.reply_text(
         text=text,
+        parse_mode=enums.ParseMode.HTML,
         disable_web_page_preview=True,
-        reply_markup=keyboard
+        reply_markup=keyboard,
     )
 
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
